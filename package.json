@@ -1,0 +1,47 @@
+{
+  "name": "compositor-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Compositor (.comp) projects: lets Claude and other agents read and edit layered Mac image documents",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "bin": {
+    "compositor-mcp": "dist/src/index.js"
+  },
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "tsc && node --test \"dist/test/*.test.js\"",
+    "prepare": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Josusanz/compositor-mcp"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "compositor",
+    "image-editing",
+    "claude",
+    "macos"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "sharp": "^0.35.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
