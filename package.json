@@ -1,6 +1,6 @@
 {
   "name": "compositor-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for Compositor (.comp) projects: lets Claude and other agents read and edit layered Mac image documents",
   "license": "MIT",
   "type": "module",
@@ -43,5 +43,6 @@
     "@types/node": "^26.6.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
-  }
+  },
+  "mcpName": "io.github.josusanz/compositor"
 }

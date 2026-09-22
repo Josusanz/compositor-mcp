@@ -31,7 +31,7 @@ import {
 } from "./comp.js";
 import { renderFlattened } from "./render.js";
 
-const server = new McpServer({ name: "compositor-mcp", version: "0.1.0" });
+const server = new McpServer({ name: "compositor-mcp", version: "0.1.1" });
 
 type ToolResult = { content: Array<{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }>; isError?: boolean };
 
