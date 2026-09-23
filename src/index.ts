@@ -578,7 +578,7 @@ server.registerResource(
 
 A package directory with \`manifest.json\` and \`images/<LAYER-UUID>.png\` (8-bit PNG, sRGB) plus optional \`images/<LAYER-UUID>.mask.png\` (8-bit grayscale, no alpha; white reveals).
 
-Manifest: format "com.compositor.project", version 1–8, colorSpace "sRGB", width/height (1–30000), optional resolution (ppi), documentID, activeLayerID, layers (bottom to top), guides.
+Manifest: format "com.compositor.project", version 1–9 (newer accepted and preserved), colorSpace "sRGB", width/height (1–30000), optional resolution (ppi), documentID, activeLayerID, layers (bottom to top), guides.
 
 Layer: id (uppercase UUID), name, isVisible, transform {origin:[x,y], size:[w,h], rotation (cw degrees), flipX, flipY, sampling}, imageFile, parentID, isGroup, opacity (0–1), blendMode (${BLEND_MODES.join(", ")}), maskFile, maskEnabled, maskSourceID (clipping base), adjustment, effects, text, shape.
 

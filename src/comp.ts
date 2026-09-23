@@ -11,7 +11,8 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 export const FORMAT = "com.compositor.project";
-export const MAX_VERSION = 8;
+/** The newest format version this tool understands and writes. Compositor 1.2.6 writes 9. */
+export const MAX_VERSION = 9;
 export const MAX_SIDE = 30_000;
 export const MAX_PIXELS = 100_000_000;
 export const MAX_LAYERS = 10_000;
@@ -108,9 +109,11 @@ export async function readManifest(pkg: string): Promise<Manifest> {
     throw new CompError("manifest.json is not valid JSON");
   }
   if (manifest.format !== FORMAT) throw new CompError(`Unknown format: ${manifest.format}`);
-  if (typeof manifest.version !== "number" || manifest.version < 1 || manifest.version > MAX_VERSION) {
+  if (typeof manifest.version !== "number" || !Number.isInteger(manifest.version) || manifest.version < 1) {
     throw new CompError(`Unsupported project version ${manifest.version} (this tool knows 1–${MAX_VERSION})`);
   }
+  // Newer versions are accepted: fields this tool does not understand are preserved on round trip and the
+  // file keeps its own version number, so the app that wrote it can still open it.
   if (!Array.isArray(manifest.layers)) throw new CompError("manifest.layers missing");
   return manifest;
 }

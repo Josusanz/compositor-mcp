@@ -30,6 +30,13 @@ Or the other way round: save in Compositor and let the agent inspect, retouch or
 
 The server also exposes a `compositor://format` resource describing the file format.
 
+## Related
+
+[marcushorndt/compositor-mcp](https://github.com/marcushorndt/compositor-mcp) takes a different route: it drives
+Compositor's own document model and renderer headlessly (Swift), so previews match the app exactly. This package is a
+plain Node server that works on the documented file format, needs no build of the app, and runs wherever Node runs.
+Pick whichever fits your setup; both open the same `.comp` files.
+
 ## Install
 
 Requires Node.js 20 or later. Compositor itself is only needed to look at the result.
@@ -83,7 +90,7 @@ The agent calls `create_project`, `add_image_layer` twice, `set_layer`, `render_
   with sorted keys and replaced atomically.
 - Fields this tool does not understand (adjustments, effects, text, shapes, guides, anything newer)
   are preserved on round trip.
-- Projects are always saved as format version 8 (the current one). Older Compositor builds reject
+- Projects are saved as format version 9 (what Compositor 1.2.6 writes); a project declaring a newer version keeps its own number and its unknown fields on round trip. Older Compositor builds reject
   newer versions; update the app if a file will not open.
 
 ## Limitations

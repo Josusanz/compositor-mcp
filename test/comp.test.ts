@@ -27,7 +27,7 @@ test("creates a manifest Compositor accepts", async () => {
   const pkg = await tmpProject();
   const m = await readManifest(pkg);
   assert.equal(m.format, "com.compositor.project");
-  assert.equal(m.version, 8);
+  assert.equal(m.version, 9);
   assert.equal(m.colorSpace, "sRGB");
   assert.match(m.documentID, /^[0-9A-F-]{36}$/);
   const raw = JSON.parse(await fs.readFile(path.join(pkg, "manifest.json"), "utf8"));
