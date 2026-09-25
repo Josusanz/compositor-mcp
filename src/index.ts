@@ -31,7 +31,7 @@ import {
 } from "./comp.js";
 import { renderFlattened } from "./render.js";
 
-const server = new McpServer({ name: "compositor-mcp", version: "0.1.2" });
+const server = new McpServer({ name: "compositor-mcp", version: "0.1.4" });
 
 type ToolResult = { content: Array<{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }>; isError?: boolean };
 
@@ -100,6 +100,7 @@ server.registerTool(
   {
     title: "Inspect project",
     description: "Reads a Compositor .comp project and returns the canvas info plus every layer in stacking order (bottom to top), with folder depth, visibility, opacity, blend mode and transform.",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: { path: pkgArg },
   },
   guard(async ({ path: pkg }) => {
@@ -113,6 +114,7 @@ server.registerTool(
   {
     title: "List layers",
     description: "Compact list of layers (id, name, kind, visibility) from top to bottom as shown in Compositor's Layers panel.",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: { path: pkgArg },
   },
   guard(async ({ path: pkg }) => {
@@ -133,6 +135,7 @@ server.registerTool(
   {
     title: "Render preview",
     description: "Flattens the project and returns a PNG preview image so the model can see the composition. Optionally saves it to a file. Clipping masks, adjustment layers and layer effects are not rendered; the response lists what was skipped.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       maxSize: z.number().int().min(16).max(4096).default(1024).describe("Longest side of the preview in pixels"),
@@ -158,6 +161,7 @@ server.registerTool(
   {
     title: "Export flattened image",
     description: "Renders the whole project at full resolution to a PNG or JPEG file.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       outputPath: z.string().describe("Destination file; .png keeps transparency, .jpg flattens onto white"),
@@ -181,6 +185,7 @@ server.registerTool(
   {
     title: "Export a layer's pixels",
     description: "Copies a pixel layer's source PNG (untransformed, original resolution) or its mask to a file.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       layer: layerArg,
@@ -207,7 +212,8 @@ server.registerTool(
   "create_project",
   {
     title: "Create project",
-    description: "Creates a new empty .comp project. Optionally adds a solid background layer.",
+    description: "Creates a new empty .comp project. Optionally adds a solid background layer. Overwrites the manifest of an existing package at that path.",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       width: z.number().int().min(1).max(30_000),
@@ -270,6 +276,7 @@ server.registerTool(
   {
     title: "Add image layer",
     description: "Imports an image file (PNG, JPEG, HEIC, TIFF, WebP…) as a new pixel layer. The pixels are stored as-is; the placement only sets the layer's transform.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       imagePath: z.string().describe("Image file to import"),
@@ -323,6 +330,7 @@ server.registerTool(
   {
     title: "Add folder",
     description: "Creates an empty layer folder (group).",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     inputSchema: { path: pkgArg, name: z.string(), ...insertArgs },
   },
   guard(async ({ path: pkg, name, parent, above, below }) => {
@@ -345,6 +353,7 @@ server.registerTool(
   {
     title: "Set layer properties",
     description: "Changes name, visibility, opacity, blend mode, mask enablement or transform (origin, size, rotation, flips) of a layer. Only the given fields change.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       layer: layerArg,
@@ -393,6 +402,7 @@ server.registerTool(
   {
     title: "Move layer in the stack",
     description: "Reorders a layer (with its subtree if it is a folder): to the top or bottom of a folder or the root, or directly above/below another layer.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       layer: layerArg,
@@ -438,6 +448,7 @@ server.registerTool(
   {
     title: "Remove layer",
     description: "Deletes a layer (and, for a folder, everything inside it) together with its image and mask files.",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     inputSchema: { path: pkgArg, layer: layerArg },
   },
   guard(async ({ path: pkg, layer }) => {
@@ -462,6 +473,7 @@ server.registerTool(
   {
     title: "Replace layer pixels",
     description: "Swaps the source pixels of a pixel layer with another image file, keeping its transform, mask and properties. Use it to round-trip a layer through an external editor or a generated image.",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       layer: layerArg,
@@ -489,6 +501,7 @@ server.registerTool(
   {
     title: "Set or clear a layer mask",
     description: "Attaches a raster mask from a grayscale image (white reveals, black hides) to a layer, or removes the existing mask. The mask is stretched over the layer's own rectangle.",
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       layer: layerArg,
@@ -523,6 +536,7 @@ server.registerTool(
   {
     title: "Resize canvas",
     description: "Changes the document size without resampling layers. Layers keep their pixels and are offset according to the anchor.",
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: {
       path: pkgArg,
       width: z.number().int().min(1).max(30_000),
@@ -551,6 +565,7 @@ server.registerTool(
   {
     title: "Open in Compositor",
     description: "Opens (or reloads) the project in the Compositor app on this Mac so the user can see the result. Compositor reads the package from disk on open.",
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     inputSchema: { path: pkgArg },
   },
   guard(async ({ path: pkg }) => {
