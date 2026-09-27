@@ -4,7 +4,7 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
-import { createProject, entries, findLayer, imageFileFor, imagePath, newID, readManifest, validate, writeManifest } from "../src/comp.js";
+import { checkImportSize, createProject, entries, findLayer, imageFileFor, imagePath, newID, readManifest, validate, writeManifest } from "../src/comp.js";
 import { renderFlattened } from "../src/render.js";
 
 async function tmpProject(): Promise<string> {
@@ -107,4 +107,12 @@ test("layers off canvas do not break rendering", async () => {
   const r = await renderFlattened(pkg, m);
   const raw = await r.image.raw().toBuffer();
   assert.deepEqual(Array.from(raw.subarray(0, 4)), [0x12, 0x34, 0x56, 255]);
+});
+
+test("import size matches what Compositor loads", () => {
+  assert.doesNotThrow(() => checkImportSize(27_000, 5_400)); // a 3 ft x 15 ft banner at 150 dpi, 145.8 MP
+  assert.doesNotThrow(() => checkImportSize(30_000, 6_666)); // right at 200 MP
+  assert.throws(() => checkImportSize(30_001, 10), /per side/);
+  assert.throws(() => checkImportSize(20_000, 10_001), /200 MP/);
+  assert.throws(() => checkImportSize(undefined, 100), /dimensions/);
 });

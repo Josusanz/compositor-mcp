@@ -14,7 +14,9 @@ import { promisify } from "node:util";
 import {
   BLEND_MODES,
   CompError,
+  MAX_PIXELS,
   SAMPLING,
+  checkImportSize,
   createProject,
   descendants,
   entries,
@@ -292,11 +294,12 @@ server.registerTool(
   guard(async ({ path: pkg, imagePath: src, name, placement, origin, size, opacity, blendMode, parent, above, below }) => {
     const m = await readManifest(pkg);
     const id = newID();
-    const input = sharp(path.resolve(src), { limitInputPixels: 100_000_000 }).rotate(); // honor EXIF orientation
-    const meta = await input.metadata();
+    // Read only the header first, so an oversized image gets a clear message rather than sharp's pixel-limit error.
+    const meta = await sharp(path.resolve(src), { limitInputPixels: false }).metadata();
+    checkImportSize(meta.width, meta.height);
+    const input = sharp(path.resolve(src), { limitInputPixels: MAX_PIXELS }).rotate(); // honor EXIF orientation
     const iw = meta.width!;
     const ih = meta.height!;
-    if (iw > 30_000 || ih > 30_000) throw new CompError("Image exceeds 30,000 px per side");
     await input.ensureAlpha().toColourspace("srgb").png({ compressionLevel: 6 }).toFile(imagePath(pkg, imageFileFor(id)));
 
     let w = iw;
@@ -485,8 +488,9 @@ server.registerTool(
     const m = await readManifest(pkg);
     const l = findLayer(m, layer);
     if (l.isGroup || l.adjustment) throw new CompError(`"${l.name}" has no pixels to replace`);
-    const input = sharp(path.resolve(src), { limitInputPixels: 100_000_000 }).rotate();
-    const meta = await input.metadata();
+    const meta = await sharp(path.resolve(src), { limitInputPixels: false }).metadata();
+    checkImportSize(meta.width, meta.height);
+    const input = sharp(path.resolve(src), { limitInputPixels: MAX_PIXELS }).rotate();
     await input.ensureAlpha().toColourspace("srgb").png({ compressionLevel: 6 }).toFile(imagePath(pkg, imageFileFor(l.id)));
     l.imageFile = imageFileFor(l.id);
     if (!keepDisplaySize) l.transform.size = [meta.width!, meta.height!];
@@ -521,7 +525,9 @@ server.registerTool(
       await writeManifest(pkg, m);
       return text(`Cleared the mask on "${l.name}"`);
     }
-    let img = sharp(path.resolve(maskPath), { limitInputPixels: 100_000_000 }).rotate().flatten({ background: "#000000" }).toColourspace("b-w");
+    const maskMeta = await sharp(path.resolve(maskPath), { limitInputPixels: false }).metadata();
+    checkImportSize(maskMeta.width, maskMeta.height);
+    let img = sharp(path.resolve(maskPath), { limitInputPixels: MAX_PIXELS }).rotate().flatten({ background: "#000000" }).toColourspace("b-w");
     if (invert) img = img.negate();
     await img.removeAlpha().png({ palette: false, compressionLevel: 6 }).toFile(imagePath(pkg, maskFileFor(l.id)));
     l.maskFile = maskFileFor(l.id);

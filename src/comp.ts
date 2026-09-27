@@ -14,7 +14,8 @@ export const FORMAT = "com.compositor.project";
 /** The newest format version this tool understands and writes. Compositor 1.2.6 writes 9. */
 export const MAX_VERSION = 9;
 export const MAX_SIDE = 30_000;
-export const MAX_PIXELS = 100_000_000;
+/** The largest single image every Mac can load: Compositor's per-surface cap (`DocumentLimits.maxSurfacePixels`). */
+export const MAX_PIXELS = 200_000_000;
 export const MAX_LAYERS = 10_000;
 
 export const BLEND_MODES = [
@@ -77,6 +78,17 @@ export class CompError extends Error {}
 
 export function newID(): string {
   return randomUUID().toUpperCase();
+}
+
+/** Rejects a source image Compositor would refuse to load, before anything is written into the package. */
+export function checkImportSize(width: number | undefined, height: number | undefined): void {
+  if (!width || !height) throw new CompError("Could not read the image's dimensions");
+  if (width > MAX_SIDE || height > MAX_SIDE) {
+    throw new CompError(`Image is ${width}×${height}; Compositor allows up to ${MAX_SIDE.toLocaleString("en-US")} px per side`);
+  }
+  if (width * height > MAX_PIXELS) {
+    throw new CompError(`Image is ${width}×${height} (${((width * height) / 1e6).toFixed(2)} MP); Compositor loads images up to ${MAX_PIXELS / 1e6} MP`);
+  }
 }
 
 export function imageFileFor(id: string): string {
