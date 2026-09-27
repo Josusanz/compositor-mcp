@@ -513,12 +513,15 @@ server.registerTool(
     const m = await readManifest(pkg);
     const l = findLayer(m, layer);
     if (!maskPath) {
-      await removeAsset(pkg, l.maskFile);
+      // Drop the reference first: Compositor reloads an open project as soon as it changes, and a manifest
+      // naming a missing mask makes it refuse the whole file.
+      const oldMask = l.maskFile;
       delete l.maskFile;
       delete l.maskEnabled;
       delete l.maskPlacement;
       delete l.maskLinked;
       await writeManifest(pkg, m);
+      await removeAsset(pkg, oldMask);
       return text(`Cleared the mask on "${l.name}"`);
     }
     let img = sharp(path.resolve(maskPath), { limitInputPixels: 100_000_000 }).rotate().flatten({ background: "#000000" }).toColourspace("b-w");
